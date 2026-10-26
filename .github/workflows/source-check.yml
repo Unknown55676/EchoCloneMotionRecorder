@@ -29,6 +29,7 @@ jobs:
           test -f src/EchoCloneMotionRecorder/MotionFrame.cs
           test -f src/EchoCloneMotionRecorder/MotionRecording.cs
           test -f src/EchoCloneMotionRecorder/MotionPlayback.cs
+          test -f src/EchoCloneMotionRecorder/MotionPlayback.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/Program.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/EchoCloneMotionRecorder.CoreChecks.csproj
           echo "Required source, test, and planning files are present."
