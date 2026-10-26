@@ -1,6 +1,4 @@
-# Building the Nomad plugin scaffold
-
-This project is a real C# plugin scaffold, but it is not yet a finished gameplay mod.
+# Building the Nomad plugin
 
 ## Required references
 
@@ -17,8 +15,17 @@ Then build with the .NET SDK:
 dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj -c Release
 ```
 
-The project intentionally fails with a clear error when those references are missing. A successful build only proves that the scaffold compiles against the supplied references; it does not prove it loads on Quest.
+The project intentionally fails with a clear error when those references are missing. A successful build only proves that the source compiles against the supplied references; it does not prove it loads or behaves correctly on Quest.
 
-## Current implementation boundary
+## Implemented gameplay prototype
 
-The current ThunderScript is only an entry point. It does not yet register the requested buttons, read player poses, spawn a clone, retarget a humanoid rig, replay weapons, or configure hostile AI. Those pieces must be added against the matching APIs and tested in Nomad. Do not package or publish this scaffold as a completed mod.
+The current ThunderScript adds ModOptions actions to spawn a vanilla `HumanMale` NPC, record player head/hand transforms, stop recording, and replay the recorded head path by moving the NPC root. It also includes a placeholder hostile-mode flag.
+
+## Known gaps
+
+- The right-hand pose is currently used as a placeholder for the weapon pose.
+- NPC head/arms/hands are not retargeted from the recording.
+- Weapon replay, hostile faction/AI, player damage, and dismemberment are not implemented.
+- The exact target game assemblies have not been used to compile this source, and no in-game Quest test has been completed.
+
+Do not package or publish this prototype as a completed mod until the game-side project builds and it has been tested in Nomad.
