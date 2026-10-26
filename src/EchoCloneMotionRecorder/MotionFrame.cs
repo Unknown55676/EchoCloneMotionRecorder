@@ -3,7 +3,7 @@ using System;
 namespace EchoCloneMotionRecorder
 {
     /// <summary>
-    /// Timestamped sample of tracked head and hand poses.
+    /// Timestamped sample of tracked head, hand, and weapon poses.
     /// This file intentionally has no Unity or Blade & Sorcery references.
     /// The integration layer must document and normalize its coordinate space.
     /// </summary>
@@ -14,6 +14,7 @@ namespace EchoCloneMotionRecorder
         public PoseSample Head = new PoseSample();
         public PoseSample LeftHand = new PoseSample();
         public PoseSample RightHand = new PoseSample();
+        public PoseSample Weapon = new PoseSample();
     }
 
     [Serializable]
