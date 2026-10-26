@@ -23,10 +23,21 @@ namespace EchoCloneMotionRecorder
         /// Read-only view of recorded frames. Each accepted frame is copied on input;
         /// samples returned by TrySample are also copies.
         /// </summary>
-        public IReadOnlyList<MotionFrame> Frames => readOnlyFrames;
+        public IReadOnlyList<MotionFrame> Frames
+        {
+            get
+            {
+                // A read-only collection alone is not enough because each frame is mutable.
+                // Return deep copies so callers cannot mutate the recording through Frames.
+                List<MotionFrame> snapshots = new List<MotionFrame>(frames.Count);
+                foreach (MotionFrame frame in frames)
+                    snapshots.Add(CloneFrame(frame));
+                return snapshots.AsReadOnly();
+            }
+        }
         public bool IsRecording { get; private set; }
         public int FrameCount => frames.Count;
-        public float DurationSeconds => frames.Count == 0 ? 0f : frames[frames.Count - 1].TimeSeconds;
+        public float DurationSeconds => frames.Count < 2 ? 0f : frames[frames.Count - 1].TimeSeconds - frames[0].TimeSeconds;
 
         public void Start()
         {
