@@ -58,6 +58,14 @@ namespace UnityEngine
         public float z;
         public float w;
 
+        public Quaternion(float x, float y, float z, float w)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
         public static Quaternion identity { get; }
         public Vector3 eulerAngles { get; }
         public static Quaternion Euler(float x, float y, float z) { return default(Quaternion); }
