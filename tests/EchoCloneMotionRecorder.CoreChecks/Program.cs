@@ -21,6 +21,7 @@ static class Program
         Run("loops playback", PlaybackLoops);
         Run("stops playback at the final frame", PlaybackStopsAtEnd);
         Run("rejects invalid playback deltas", PlaybackRejectsInvalidDeltas);
+        Run("playback is isolated from source recording changes", PlaybackIsolatedFromSourceChanges);
         return 0;
     }
 
@@ -210,6 +211,24 @@ static class Program
         Assert(!playback.Advance(-1), "negative delta rejected");
         Assert(!playback.Advance(float.NaN), "NaN delta rejected");
         Assert(!playback.Advance(float.PositiveInfinity), "infinite delta rejected");
+    }
+
+    static void PlaybackIsolatedFromSourceChanges()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(0, 3)), "first frame accepted");
+        Assert(recording.TryAddFrame(Frame(1, 9)), "second frame accepted");
+        recording.Stop();
+
+        var playback = new MotionPlayback();
+        Assert(playback.Start(recording), "playback starts");
+        recording.Clear();
+        Assert(playback.TryGetCurrentFrame(out var sample), "playback retains its snapshot after source clear");
+        Near(sample.Head.PositionX, 3, "playback data remains stable");
+        Assert(playback.Advance(1), "playback snapshot advances");
+        Assert(playback.TryGetCurrentFrame(out var last), "last snapshot frame is available");
+        Near(last.Head.PositionX, 9, "snapshot contains the full source recording");
     }
 
     static MotionFrame Frame(float time, float x) => new()
