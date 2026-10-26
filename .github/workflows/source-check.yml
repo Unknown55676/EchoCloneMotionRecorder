@@ -50,6 +50,28 @@ jobs:
           if missing:
               raise SystemExit("Manifest missing required fields: " + ", ".join(missing))
           print("Project XML and manifest JSON parse successfully.")
+
+          # Guard the game-side integration against accidentally reverting to a
+          # logging-only scaffold. This is a source check, not a substitute for
+          # compiling against the proprietary target-game assemblies.
+          with open("src/EchoCloneMotionRecorder.Nomad/EchoCloneThunderScript.cs", encoding="utf-8") as file:
+              plugin = file.read()
+          required_plugin_tokens = (
+              "SpawnEchoCloneOption",
+              "RecordMotionOption",
+              "StopRecordingOption",
+              "PlaybackOption",
+              "HostileModeOption",
+              "Catalog.GetData<CreatureData>",
+              ".SpawnAsync(",
+              "recording.TryAddFrame(frame)",
+              "playback.TryGetCurrentFrame",
+              "Player.local",
+          )
+          missing_plugin_tokens = [token for token in required_plugin_tokens if token not in plugin]
+          if missing_plugin_tokens:
+              raise SystemExit("Nomad gameplay source missing: " + ", ".join(missing_plugin_tokens))
+          print("Nomad gameplay source contains spawn, recording, playback, and option entry points.")
           PY
           echo "Required source, test, and integration files are present."
 
