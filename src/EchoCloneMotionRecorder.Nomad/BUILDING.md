@@ -17,15 +17,17 @@ dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csp
 
 The project intentionally fails with a clear error when those references are missing. A successful build only proves that the source compiles against the supplied references; it does not prove it loads or behaves correctly on Quest.
 
-## Implemented gameplay prototype
+## Current prototype
 
-The current ThunderScript adds ModOptions actions to spawn a vanilla `HumanMale` NPC, record player head/hand transforms, stop recording, and replay the recorded head path by moving the NPC root. It also includes a placeholder hostile-mode flag.
+The ThunderScript attempts to spawn a vanilla `HumanMale` NPC, record player head/hand transforms, and replay the recorded head path by moving the NPC root. It now also attempts best-effort retargeting to the spawned Unity humanoid Animator's Head, LeftHand, and RightHand bones when available. Recording timestamps use an accumulated monotonic recording clock.
 
-## Known gaps
+The bone transforms are set during the ThunderScript update. The game's animation and ragdoll update order may overwrite them or cause poor physics; this is experimental until tested on the exact Nomad build.
 
-- The right-hand pose is currently used as a placeholder for the weapon pose.
-- NPC head/arms/hands are not retargeted from the recording.
-- Weapon replay, hostile faction/AI, player damage, and dismemberment are not implemented.
+## Remaining major features
+
+- The weapon pose is still a right-hand placeholder; actual held-item detection and weapon replay are not implemented.
+- Hostile Mode still only toggles a flag; faction/AI behavior is not connected.
+- Reliable player damage and native dismemberment are not implemented or verified.
 - The exact target game assemblies have not been used to compile this source, and no in-game Quest test has been completed.
 
 Do not package or publish this prototype as a completed mod until the game-side project builds and it has been tested in Nomad.
