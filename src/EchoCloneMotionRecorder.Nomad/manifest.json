@@ -1,0 +1,7 @@
+{
+  "Name": "EchoClone Motion Recorder",
+  "Description": "Prototype Nomad script entry point. This build only exposes prototype settings and startup logging; clone recording and combat are not implemented yet.",
+  "Author": "Unknown55676",
+  "ModVersion": "0.1.0",
+  "GameVersion": "1.3.2"
+}
