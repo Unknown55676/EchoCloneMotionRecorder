@@ -41,7 +41,7 @@ namespace UnityEngine
             this.z = z;
         }
 
-        public float sqrMagnitude { get; }
+        public float sqrMagnitude { get { return 0f; } }
         public void Normalize() { }
         public static Vector3 forward { get; }
 
