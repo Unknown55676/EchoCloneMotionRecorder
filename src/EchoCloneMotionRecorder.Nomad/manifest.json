@@ -1,6 +1,6 @@
 {
   "Name": "EchoClone Motion Recorder",
-  "Description": "Prototype Nomad script entry point. This build only exposes prototype settings and startup logging; clone recording and combat are not implemented yet.",
+  "Description": "Nomad prototype: spawns a vanilla human NPC, records player head and hand poses, and replays the recorded head path. Full-body retargeting and hostile combat are not implemented.",
   "Author": "Unknown55676",
   "ModVersion": "0.1.0",
   "GameVersion": "1.3.2"
