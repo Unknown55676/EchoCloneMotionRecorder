@@ -26,6 +26,7 @@ A working in-game mod needs the matching Nomad SDK/reference assemblies and a co
 
 - [Technical plan](docs/TECHNICAL_PLAN.md)
 - [Quest 3S + iPhone workflow](docs/QUEST_ONLY_WORKFLOW.md)
+- [SDK integration notes](docs/SDK_INTEGRATION_NOTES.md)
 
 ## Automated check
 
