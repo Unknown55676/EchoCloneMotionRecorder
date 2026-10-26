@@ -1,4 +1,5 @@
 using EchoCloneMotionRecorder;
+using System.Collections;
 
 static class Program
 {
@@ -8,10 +9,10 @@ static class Program
     {
         Run("cannot add frames before recording", CannotAddBeforeRecording);
         Run("records and samples midpoint", SamplesMidpoint);
-        Run("rejects invalid and out-of-order frames", RejectsInvalidFrames);
+        Run("rejects invalid and non-increasing timestamps", RejectsInvalidFrames);
         Run("copies frames to prevent caller mutation", CopiesFrames);
+        Run("exposes a read-only frame collection", FramesAreReadOnly);
         Run("clears recording", ClearsRecording);
-        Console.WriteLine($"Passed {checks} core checks.");
         return 0;
     }
 
@@ -41,6 +42,7 @@ static class Program
         Near(sample.Head.PositionX, 5, "position interpolated");
         Near(sample.Head.RotationW, 1, "rotation normalized");
         Near(recording.DurationSeconds, 2, "duration reflects last timestamp");
+        Assert(!recording.TrySample(float.PositiveInfinity, out _), "infinite sample time rejected");
     }
 
     static void RejectsInvalidFrames()
@@ -49,6 +51,7 @@ static class Program
         recording.Start();
         Assert(!recording.TryAddFrame(Frame(float.NaN, 0)), "NaN timestamp rejected");
         Assert(recording.TryAddFrame(Frame(2, 2)), "valid timestamp accepted");
+        Assert(!recording.TryAddFrame(Frame(2, 3)), "duplicate timestamp rejected");
         Assert(!recording.TryAddFrame(Frame(1, 1)), "out-of-order timestamp rejected");
         Assert(recording.FrameCount == 1, "invalid frames are not stored");
     }
@@ -62,6 +65,17 @@ static class Program
         original.Head.PositionX = 999;
         Assert(recording.TrySample(0, out var sample), "sample exists");
         Near(sample.Head.PositionX, 4, "stored frame is isolated from caller mutation");
+        sample.Head.PositionX = -999;
+        Assert(recording.TrySample(0, out var secondSample), "second sample exists");
+        Near(secondSample.Head.PositionX, 4, "returned sample is isolated from stored data");
+    }
+
+    static void FramesAreReadOnly()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(0, 4)), "frame accepted");
+        Assert(recording.Frames is not IList, "public frames collection is not a mutable IList");
     }
 
     static void ClearsRecording()
