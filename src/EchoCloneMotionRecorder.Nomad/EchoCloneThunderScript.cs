@@ -9,10 +9,11 @@ namespace EchoCloneMotionRecorder.Nomad
     /// First gameplay integration for Nomad:
     /// - spawns a vanilla human creature,
     /// - records player head and hand world poses,
-    /// - replays the recorded head path by moving the spawned creature root.
+    /// - replays the recorded head path by moving the spawned creature root,
+    /// - attempts humanoid head/hand pose retargeting when the spawned rig exposes those bones.
     ///
-    /// This is intentionally not described as full body retargeting: the NPC's arms,
-    /// weapon handling, and combat AI are not driven by the recording yet.
+    /// Bone retargeting is a prototype: it must be tested against Nomad's animation/physics
+    /// update order. Held-weapon tracking and hostile combat remain separate unfinished work.
     /// </summary>
     public sealed class EchoCloneThunderScript : ThunderScript
     {
@@ -34,6 +35,10 @@ namespace EchoCloneMotionRecorder.Nomad
 
         private Creature echoClone;
         private float elapsedSinceSample;
+        private float recordingClock;
+        private Transform cloneHeadBone;
+        private Transform cloneLeftHandBone;
+        private Transform cloneRightHandBone;
         private Vector3 recordedStartHeadPosition;
         private Quaternion recordedStartHeadRotation = Quaternion.identity;
         private Vector3 cloneStartPosition;
@@ -167,6 +172,7 @@ namespace EchoCloneMotionRecorder.Nomad
                     echoClone = creature;
                     cloneStartPosition = creature.transform.position;
                     cloneStartRotation = creature.transform.rotation;
+                    CacheCloneBones(creature);
                     Debug.Log(LogPrefix + "Spawned vanilla human NPC. Recorded frames: " + recording.FrameCount);
                 });
             }
@@ -188,7 +194,8 @@ namespace EchoCloneMotionRecorder.Nomad
 
             playback.Stop();
             recording.Start();
-            elapsedSinceSample = RecordIntervalSeconds;
+            elapsedSinceSample = 0f;
+            recordingClock = 0f;
             recordedStartHeadPosition = player.head.transform.position;
             recordedStartHeadRotation = player.head.transform.rotation;
             Debug.Log(LogPrefix + "Recording started.");
@@ -207,9 +214,11 @@ namespace EchoCloneMotionRecorder.Nomad
             if (elapsedSinceSample < RecordIntervalSeconds)
                 return;
 
-            // Sample once per update, but keep timestamps tied to elapsed game time.
+            // Advance a monotonic clock by the accumulated time since the previous sample.
+            // Do not derive timestamps from DurationSeconds, which is a property of stored frames.
             float sampleDelta = elapsedSinceSample;
             elapsedSinceSample = 0f;
+            recordingClock += sampleDelta;
 
             Player player = Player.local;
             if (player == null || player.head == null || player.handLeft == null || player.handRight == null)
@@ -218,9 +227,7 @@ namespace EchoCloneMotionRecorder.Nomad
             Transform head = player.head.transform;
             Transform left = player.handLeft.transform;
             Transform right = player.handRight.transform;
-            float time = recording.FrameCount == 0
-                ? 0f
-                : recording.DurationSeconds + sampleDelta;
+            float time = recordingClock;
 
             MotionFrame frame = new MotionFrame
             {
@@ -233,13 +240,7 @@ namespace EchoCloneMotionRecorder.Nomad
             };
 
             if (!recording.TryAddFrame(frame))
-            {
-                // DurationSeconds is based on first/last timestamps; use a monotonic
-                // clock fallback when a frame was rejected due to a timestamp collision.
-                float nextTime = recording.FrameCount == 0 ? 0f : recording.Frames[recording.FrameCount - 1].TimeSeconds + 0.001f;
-                frame.TimeSeconds = nextTime;
-                recording.TryAddFrame(frame);
-            }
+                Debug.LogWarning(LogPrefix + "Dropped a frame because its timestamp or pose was invalid.");
         }
 
         private void StartPlayback()
@@ -292,12 +293,61 @@ namespace EchoCloneMotionRecorder.Nomad
 
             Quaternion currentHeadRotation = new Quaternion(
                 frame.Head.RotationX, frame.Head.RotationY, frame.Head.RotationZ, frame.Head.RotationW);
-            Quaternion rotationDelta = Quaternion.Inverse(yawOnly) * currentHeadRotation;
+            Quaternion rotationDelta = Quaternion.Inverse(recordedStartHeadRotation) * currentHeadRotation;
             Vector3 euler = rotationDelta.eulerAngles;
             echoClone.transform.rotation = cloneStartRotation * Quaternion.Euler(0f, euler.y, 0f);
 
+            // Best-effort humanoid bone retargeting. The NPC root follows the recorded head
+            // translation; the hand/head bones follow their recorded offsets in that same frame.
+            // Nomad's Animator/ragdoll update order must be verified in headset testing.
+            ApplyRecordedBonePose(cloneHeadBone, frame.Head, recordedStartHeadPosition,
+                recordedStartHeadRotation, cloneStartPosition, cloneStartRotation);
+            ApplyRecordedBonePose(cloneLeftHandBone, frame.LeftHand, recordedStartHeadPosition,
+                recordedStartHeadRotation, cloneStartPosition, cloneStartRotation);
+            ApplyRecordedBonePose(cloneRightHandBone, frame.RightHand, recordedStartHeadPosition,
+                recordedStartHeadRotation, cloneStartPosition, cloneStartRotation);
+
             if (!playback.IsPlaying)
                 Debug.Log(LogPrefix + "Playback finished.");
+        }
+
+        private void CacheCloneBones(Creature creature)
+        {
+            cloneHeadBone = null;
+            cloneLeftHandBone = null;
+            cloneRightHandBone = null;
+
+            if (creature == null || creature.animator == null || !creature.animator.isHuman)
+            {
+                Debug.LogWarning(LogPrefix + "Spawned NPC has no humanoid Animator; body retargeting is unavailable.");
+                return;
+            }
+
+            cloneHeadBone = creature.animator.GetBoneTransform(HumanBodyBones.Head);
+            cloneLeftHandBone = creature.animator.GetBoneTransform(HumanBodyBones.LeftHand);
+            cloneRightHandBone = creature.animator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (cloneHeadBone == null || cloneLeftHandBone == null || cloneRightHandBone == null)
+                Debug.LogWarning(LogPrefix + "One or more humanoid bones were not found; only available bones will be retargeted.");
+        }
+
+        private static void ApplyRecordedBonePose(
+            Transform target,
+            PoseSample pose,
+            Vector3 recordedOrigin,
+            Quaternion recordedOriginRotation,
+            Vector3 cloneOrigin,
+            Quaternion cloneOriginRotation)
+        {
+            if (target == null || pose == null)
+                return;
+
+            Vector3 recordedPosition = new Vector3(pose.PositionX, pose.PositionY, pose.PositionZ);
+            Quaternion recordedRotation = new Quaternion(
+                pose.RotationX, pose.RotationY, pose.RotationZ, pose.RotationW);
+            Vector3 localOffset = Quaternion.Inverse(recordedOriginRotation) * (recordedPosition - recordedOrigin);
+            Quaternion localRotation = Quaternion.Inverse(recordedOriginRotation) * recordedRotation;
+            target.position = cloneOrigin + cloneOriginRotation * localOffset;
+            target.rotation = cloneOriginRotation * localRotation;
         }
 
         private void ToggleHostileMode()
