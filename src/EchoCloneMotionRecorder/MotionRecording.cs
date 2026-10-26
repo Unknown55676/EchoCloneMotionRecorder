@@ -114,15 +114,21 @@ namespace EchoCloneMotionRecorder
 
         private static PoseSample Interpolate(PoseSample a, PoseSample b, float t)
         {
+            // q and -q represent the same orientation. Flip b when needed so
+            // interpolation follows the shorter quaternion path and avoids a zero midpoint.
+            float dot = a.RotationX * b.RotationX + a.RotationY * b.RotationY +
+                        a.RotationZ * b.RotationZ + a.RotationW * b.RotationW;
+            float sign = dot < 0f ? -1f : 1f;
+
             PoseSample p = new PoseSample
             {
                 PositionX = Lerp(a.PositionX, b.PositionX, t),
                 PositionY = Lerp(a.PositionY, b.PositionY, t),
                 PositionZ = Lerp(a.PositionZ, b.PositionZ, t),
-                RotationX = Lerp(a.RotationX, b.RotationX, t),
-                RotationY = Lerp(a.RotationY, b.RotationY, t),
-                RotationZ = Lerp(a.RotationZ, b.RotationZ, t),
-                RotationW = Lerp(a.RotationW, b.RotationW, t)
+                RotationX = Lerp(a.RotationX, b.RotationX * sign, t),
+                RotationY = Lerp(a.RotationY, b.RotationY * sign, t),
+                RotationZ = Lerp(a.RotationZ, b.RotationZ * sign, t),
+                RotationW = Lerp(a.RotationW, b.RotationW * sign, t)
             };
 
             float magnitude = (float)Math.Sqrt(
