@@ -17,6 +17,10 @@ static class Program
         Run("frame snapshots cannot mutate the recording", FrameSnapshotsAreIsolated);
         Run("duration uses the first frame as its origin", DurationUsesFirstTimestamp);
         Run("clears recording", ClearsRecording);
+        Run("plays a recording from its first timestamp", PlaybackUsesRelativeTime);
+        Run("loops playback", PlaybackLoops);
+        Run("stops playback at the final frame", PlaybackStopsAtEnd);
+        Run("rejects invalid playback deltas", PlaybackRejectsInvalidDeltas);
         return 0;
     }
 
@@ -143,6 +147,69 @@ static class Program
         Assert(!recording.IsRecording, "clear stops recording");
         Assert(recording.FrameCount == 0, "clear removes frames");
         Assert(!recording.TrySample(0, out _), "empty recording cannot be sampled");
+    }
+
+    static void PlaybackUsesRelativeTime()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(5, 10)), "first frame accepted");
+        Assert(recording.TryAddFrame(Frame(7, 20)), "second frame accepted");
+        recording.Stop();
+
+        var playback = new MotionPlayback();
+        Assert(playback.Start(recording), "playback starts");
+        Assert(playback.TryGetCurrentFrame(out var first), "first playback frame available");
+        Near(first.Head.PositionX, 10, "playback begins at first recorded frame");
+        Assert(playback.Advance(1), "playback advances");
+        Assert(playback.TryGetCurrentFrame(out var middle), "midpoint playback frame available");
+        Near(middle.Head.PositionX, 15, "playback samples relative to recording start");
+    }
+
+    static void PlaybackLoops()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(0, 0)), "first frame accepted");
+        Assert(recording.TryAddFrame(Frame(2, 20)), "second frame accepted");
+        recording.Stop();
+
+        var playback = new MotionPlayback();
+        Assert(playback.Start(recording, loop: true), "looping playback starts");
+        Assert(playback.Advance(2.5f), "looping playback advances");
+        Near(playback.CurrentTimeSeconds, 0.5f, "playback wraps around duration");
+        Assert(playback.IsPlaying, "looping playback remains active");
+    }
+
+    static void PlaybackStopsAtEnd()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(0, 0)), "first frame accepted");
+        Assert(recording.TryAddFrame(Frame(1, 10)), "second frame accepted");
+        recording.Stop();
+
+        var playback = new MotionPlayback();
+        Assert(playback.Start(recording), "playback starts");
+        Assert(playback.Advance(5), "large delta accepted");
+        Near(playback.CurrentTimeSeconds, 1, "playback clamps to end");
+        Assert(!playback.IsPlaying, "non-looping playback stops at end");
+        Assert(playback.TryGetCurrentFrame(out var last), "final frame remains sampleable");
+        Near(last.Head.PositionX, 10, "final pose is available after stopping");
+    }
+
+    static void PlaybackRejectsInvalidDeltas()
+    {
+        var playback = new MotionPlayback();
+        Assert(!playback.Start(null), "null recording rejected");
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(0, 0)), "frame accepted");
+        recording.Stop();
+        Assert(playback.Start(recording), "playback starts");
+        Assert(!playback.Advance(-1), "negative delta rejected");
+        Assert(!playback.Advance(float.NaN), "NaN delta rejected");
+        Assert(!playback.Advance(float.PositiveInfinity), "infinite delta rejected");
     }
 
     static MotionFrame Frame(float time, float x) => new()
