@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Linq.Expressions;
 using EchoCloneMotionRecorder;
 using ThunderRoad;
 using UnityEngine;
@@ -524,21 +523,19 @@ namespace EchoCloneMotionRecorder.Nomad
             if (delegateType.IsInstanceOfType(covariantCallback))
                 return covariantCallback;
 
-            MethodInfo invoke = delegateType.GetMethod("Invoke");
-            if (invoke == null)
-                return null;
-
-            ParameterInfo[] callbackParameters = invoke.GetParameters();
-            if (callbackParameters.Length != 1)
-                return null;
-
-            ParameterExpression parameter = Expression.Parameter(callbackParameters[0].ParameterType, "spawnedCreature");
+            // The documented CreatureData callback is Action<Creature>; contravariance
+            // should normally make Action<object> assignable. As a fallback, use delegate
+            // binding rather than runtime expression compilation (which may be unsupported
+            // on an IL2CPP scripting bridge).
             MethodInfo handler = GetType().GetMethod("OnSpawnCompleted", BindingFlags.Instance | BindingFlags.NonPublic);
-            MethodCallExpression call = Expression.Call(
-                Expression.Constant(this),
-                handler,
-                Expression.Convert(parameter, typeof(object)));
-            return Expression.Lambda(delegateType, call, parameter).Compile();
+            try
+            {
+                return Delegate.CreateDelegate(delegateType, this, handler, false);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static MethodInfo FindSpawnMethod(Type creatureDataType)
