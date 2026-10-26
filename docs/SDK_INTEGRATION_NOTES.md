@@ -4,6 +4,8 @@ Target game confirmed by the user: **Blade & Sorcery: Nomad 1.3.2.261012003** on
 
 This note records verified documentation and public-source leads before writing game-dependent code. It is not a claim that the plugin has been implemented or tested on Quest.
 
+**Important build constraint:** Nomad is IL2CPP. The project needs API references compatible with Nomad's scripting bridge, not merely the ordinary PCVR Managed assemblies. The public reference route for the exact target build is still unverified. See [Nomad IL2CPP reference status](NOMAD_IL2CPP_REFERENCE_STATUS.md).
+
 ## Version-specific SDK concern
 
 The October 2026 1.3.2 update notes say the SDK assembly list was updated to include `Unity.XR.OpenXR`, to prevent mod loading issues. The matching SDK/reference set for the user's exact Nomad build must be used; do not assume an older SDK setup is compatible.
@@ -92,4 +94,4 @@ References:
 
 ## Current implementation boundary
 
-The repository's .NET project builds only the game-independent motion data/recording core. A successful core build is an early quality check only, not proof that the game mod loads or is playable. No game-specific plugin should be marked complete until it builds against the matching SDK and is tested in Nomad.
+The repository's .NET project builds only the game-independent motion data/recording core. A successful core build is an early quality check only, not proof that the game mod loads or is playable. No game-specific plugin should be marked complete until it builds against the matching SDK/API contract and is tested in Nomad.
