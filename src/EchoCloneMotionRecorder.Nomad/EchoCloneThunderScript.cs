@@ -24,10 +24,9 @@ namespace EchoCloneMotionRecorder.Nomad
 
         public static EchoCloneThunderScript Instance { get; private set; }
 
-        public static ModOptionBool[] actionValues =
+        public static ModOptionString[] actionValues =
         {
-            new ModOptionBool("No", false),
-            new ModOptionBool("Yes", true)
+            new ModOptionString("Run", "run")
         };
 
         private readonly MotionRecording recording = new MotionRecording();
@@ -48,48 +47,48 @@ namespace EchoCloneMotionRecorder.Nomad
         public int RecordedFrameCount => recording.FrameCount;
 
         [ModOptionCategory("EchoClone", 0)]
+        [ModOptionDontSave]
         [ModOption("Spawn EchoClone", "Spawn a vanilla human NPC for playback.", nameof(actionValues), defaultValueIndex = 0)]
         [ModOptionButton]
-        public static void SpawnEchoCloneOption(bool value)
+        public static void SpawnEchoCloneOption(string _)
         {
-            if (value)
-                Instance?.SpawnEchoClone();
+            Instance?.SpawnEchoClone();
         }
 
         [ModOptionCategory("EchoClone", 0)]
+        [ModOptionDontSave]
         [ModOption("Record Motion", "Record head and both hand poses. Choose Yes to start recording.", nameof(actionValues), defaultValueIndex = 0)]
         [ModOptionButton]
-        public static void RecordMotionOption(bool value)
+        public static void RecordMotionOption(string _)
         {
-            if (value)
-                Instance?.StartRecording();
+            Instance?.StartRecording();
         }
 
         [ModOptionCategory("EchoClone", 0)]
+        [ModOptionDontSave]
         [ModOption("Stop Recording", "Stop the current recording.", nameof(actionValues), defaultValueIndex = 0)]
         [ModOptionButton]
-        public static void StopRecordingOption(bool value)
+        public static void StopRecordingOption(string _)
         {
-            if (value)
-                Instance?.StopRecording();
+            Instance?.StopRecording();
         }
 
         [ModOptionCategory("EchoClone", 0)]
+        [ModOptionDontSave]
         [ModOption("Playback", "Replay the recorded head path with the spawned NPC.", nameof(actionValues), defaultValueIndex = 0)]
         [ModOptionButton]
-        public static void PlaybackOption(bool value)
+        public static void PlaybackOption(string _)
         {
-            if (value)
-                Instance?.StartPlayback();
+            Instance?.StartPlayback();
         }
 
         [ModOptionCategory("EchoClone", 0)]
+        [ModOptionDontSave]
         [ModOption("Hostile Mode", "Prototype flag only; this does not yet change NPC faction or combat AI.", nameof(actionValues), defaultValueIndex = 0)]
         [ModOptionButton]
-        public static void HostileModeOption(bool value)
+        public static void HostileModeOption(string _)
         {
-            if (value)
-                Instance?.ToggleHostileMode();
+            Instance?.ToggleHostileMode();
         }
 
         public override void ScriptLoaded(ModManager.ModData modData)
