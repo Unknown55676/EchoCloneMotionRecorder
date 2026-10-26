@@ -6,6 +6,8 @@ on:
     paths:
       - "src/**"
       - "tests/**"
+      - "build/contracts/**"
+      - "tools/package-mod.ps1"
       - ".github/workflows/nomad-cloud-build.yml"
 
 permissions:
@@ -13,7 +15,7 @@ permissions:
 
 jobs:
   core-checks:
-    name: Build and test game-independent core
+    name: Build and test motion recorder core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,12 +28,17 @@ jobs:
         run: dotnet run --project tests/EchoCloneMotionRecorder.CoreChecks/EchoCloneMotionRecorder.CoreChecks.csproj --configuration Release
 
   nomad-plugin:
-    name: Compile Nomad plugin and package mod
+    name: Compile and package Nomad test candidate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check for private game references
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Check for optional exact game references
         id: refs
+        shell: bash
         env:
           THUNDERROAD_DLL_B64: ${{ secrets.NOMAD_THUNDERROAD_DLL_B64 }}
           UNITY_DLL_B64: ${{ secrets.NOMAD_UNITYENGINE_COREMODULE_DLL_B64 }}
@@ -40,14 +47,12 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Plugin build skipped: private DLL secrets are not configured. Core tests still run."
+            echo "::notice::Exact game DLLs are not configured; using build-only API contracts. Result is a test candidate, not Quest-verified."
           fi
-      - uses: actions/setup-dotnet@v4
+
+      - name: Restore exact game references from private repository secrets
         if: steps.refs.outputs.available == 'true'
-        with:
-          dotnet-version: "8.0.x"
-      - name: Restore private game references from repository secrets
-        if: steps.refs.outputs.available == 'true'
+        shell: bash
         env:
           THUNDERROAD_DLL_B64: ${{ secrets.NOMAD_THUNDERROAD_DLL_B64 }}
           UNITY_DLL_B64: ${{ secrets.NOMAD_UNITYENGINE_COREMODULE_DLL_B64 }}
@@ -57,18 +62,29 @@ jobs:
           printf '%s' "$UNITY_DLL_B64" | base64 --decode > "$RUNNER_TEMP/nomad-managed/UnityEngine.CoreModule.dll"
           test -s "$RUNNER_TEMP/nomad-managed/ThunderRoad.dll"
           test -s "$RUNNER_TEMP/nomad-managed/UnityEngine.CoreModule.dll"
-      - name: Build Nomad plugin against supplied game assemblies
+
+      - name: Build plugin against exact game references
         if: steps.refs.outputs.available == 'true'
-        run: dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj --configuration Release -p:NomadManagedDir="$RUNNER_TEMP/nomad-managed"
-      - name: Package installable ZIP
+        run: dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj --configuration Release -p:UseNomadApiContracts=false -p:NomadManagedDir="$RUNNER_TEMP/nomad-managed"
+
+      - name: Build plugin against compile-time API contracts
+        if: steps.refs.outputs.available != 'true'
+        run: dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj --configuration Release -p:UseNomadApiContracts=true
+
+      - name: Package candidate ZIP (exact references)
         if: steps.refs.outputs.available == 'true'
         shell: pwsh
-        run: ./tools/package-mod.ps1 -Configuration Release
-      - name: Upload ZIP artifact
-        if: steps.refs.outputs.available == 'true'
+        run: ./tools/package-mod.ps1 -BuildConfiguration Release -ReferenceMode Exact
+
+      - name: Package candidate ZIP (compile-time contracts)
+        if: steps.refs.outputs.available != 'true'
+        shell: pwsh
+        run: ./tools/package-mod.ps1 -BuildConfiguration Release -ReferenceMode Contract
+
+      - name: Upload test candidate
         uses: actions/upload-artifact@v4
         with:
-          name: EchoCloneMotionRecorder-Nomad
+          name: EchoCloneMotionRecorder-Nomad-candidate
           path: artifacts/EchoCloneMotionRecorder-Nomad.zip
           if-no-files-found: error
           retention-days: 14
