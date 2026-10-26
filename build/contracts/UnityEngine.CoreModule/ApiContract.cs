@@ -25,7 +25,7 @@ namespace UnityEngine
         public Vector3 position { get; set; }
         public Quaternion rotation { get; set; }
         public Vector3 forward { get; }
-        public Vector3 eulerAngles { get; }
+        public Vector3 eulerAngles { get { return default(Vector3); } }
     }
 
     public struct Vector3
@@ -41,7 +41,7 @@ namespace UnityEngine
             this.z = z;
         }
 
-        public float sqrMagnitude { get; }
+        public float sqrMagnitude { get { return 0f; } }
         public void Normalize() { }
         public static Vector3 forward { get; }
 
@@ -58,8 +58,16 @@ namespace UnityEngine
         public float z;
         public float w;
 
+        public Quaternion(float x, float y, float z, float w)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
         public static Quaternion identity { get; }
-        public Vector3 eulerAngles { get; }
+        public Vector3 eulerAngles { get { return default(Vector3); } }
         public static Quaternion Euler(float x, float y, float z) { return default(Quaternion); }
         public static Quaternion Inverse(Quaternion rotation) { return default(Quaternion); }
         public static Quaternion operator *(Quaternion left, Quaternion right) { return default(Quaternion); }
