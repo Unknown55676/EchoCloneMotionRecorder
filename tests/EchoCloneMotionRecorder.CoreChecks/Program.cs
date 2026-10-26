@@ -75,7 +75,7 @@ static class Program
         var recording = new MotionRecording();
         recording.Start();
         Assert(recording.TryAddFrame(Frame(0, 4)), "frame accepted");
-        Assert(recording.Frames is not IList, "public frames collection is not a mutable IList");
+        Assert(recording.Frames is IList list && list.IsReadOnly, "public frames collection reports itself read-only");
     }
 
     static void ClearsRecording()
