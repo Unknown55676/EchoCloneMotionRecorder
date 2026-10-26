@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace EchoCloneMotionRecorder
 {
@@ -12,11 +11,8 @@ namespace EchoCloneMotionRecorder
     public sealed class MotionRecording
     {
         private readonly List<MotionFrame> frames = new List<MotionFrame>();
-        private readonly ReadOnlyCollection<MotionFrame> readOnlyFrames;
-
         public MotionRecording()
         {
-            readOnlyFrames = frames.AsReadOnly();
         }
 
         /// <summary>
