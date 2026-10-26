@@ -1,6 +1,18 @@
 # SDK integration notes
 
-This note records verified documentation leads before writing game-dependent code. It is not a claim that the plugin has been implemented.
+Target game confirmed by the user: **Blade & Sorcery: Nomad 1.3.2.261012003** on Quest 3S.
+
+This note records verified documentation leads before writing game-dependent code. It is not a claim that the plugin has been implemented or tested on Quest.
+
+## Version-specific SDK concern
+
+The October 2026 1.3.2 update notes say the SDK assembly list was updated to include `Unity.XR.OpenXR`, to prevent mod loading issues. The matching SDK/reference set for the user's exact Nomad build must be used; do not assume an older SDK setup is compatible.
+
+Update notes:
+- https://gameupdatenotifier.com/g/blade-and-sorcery/v/1-3-2
+- https://steamdb.info/patchnotes/25901209/
+
+The game-independent .NET project in this repository is not a game plugin. It currently does not reference Unity, ThunderRoad, XR tracking, creature spawning, or in-game UI APIs.
 
 ## Mod controls
 
@@ -8,14 +20,14 @@ The BasSDK ModOptions guide documents static C# members decorated with attribute
 
 Official community documentation: https://kospy.github.io/BasSDK/Components/Guides/ModOptions/
 
-This looks like a candidate for the first control prototype:
+Candidate controls:
 - Spawn EchoClone
 - Start recording
 - Stop recording
 - Play recording
 - Hostile mode toggle
 
-Before implementing these methods, the project must reference the exact BasSDK assemblies matching the installed Nomad version. Controls must call real game integration methods, not placeholders.
+These controls must call actual game integration methods, not placeholders.
 
 ## Creature and combat integration
 
@@ -35,4 +47,4 @@ References:
 
 ## Current implementation boundary
 
-The repository's .NET project builds only the game-independent motion data/recording core. It is intentionally not a game plugin and does not reference Unity, ThunderRoad, XR tracking, creature spawning, or in-game UI APIs. A successful core build is only an early quality check.
+The repository's .NET project builds only the game-independent motion data/recording core. A successful core build is an early quality check only, not proof that the game mod loads or is playable.
