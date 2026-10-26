@@ -22,8 +22,23 @@ namespace EchoCloneMotionRecorder
             if (source == null || source.FrameCount == 0)
                 return false;
 
-            recording = source;
-            firstFrameTime = source.Frames[0].TimeSeconds;
+            // Freeze the source at playback start so clearing or restarting the live recorder
+            // cannot invalidate an active playback session.
+            var sourceFrames = source.Frames;
+            if (sourceFrames.Count == 0)
+                return false;
+
+            var snapshot = new MotionRecording();
+            snapshot.Start();
+            foreach (MotionFrame frame in sourceFrames)
+            {
+                if (!snapshot.TryAddFrame(frame))
+                    return false;
+            }
+            snapshot.Stop();
+
+            recording = snapshot;
+            firstFrameTime = sourceFrames[0].TimeSeconds;
             Loop = loop;
             CurrentTimeSeconds = 0f;
             IsPlaying = true;
