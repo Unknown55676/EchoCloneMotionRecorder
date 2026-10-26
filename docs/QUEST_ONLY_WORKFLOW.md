@@ -2,7 +2,7 @@
 
 ## Current reality
 
-The repository is connected to GitHub, but it is not yet a working Blade & Sorcery: Nomad mod. It currently contains planning documentation and a game-independent motion recorder core with tests for timestamp validation, safe copying, interpolation, and clearing. There is no compiled plugin, game manifest, NPC integration, or installable ZIP.
+The repository is connected to GitHub, but it is not yet a working Blade & Sorcery: Nomad mod. It currently contains planning documentation and a game-independent motion recorder and playback core with tests for timestamp validation, isolated frame snapshots, interpolation, duration, looping, playback boundaries, and clearing. There is no compiled plugin, game manifest, NPC integration, or installable ZIP.
 
 A Quest 3S and iPhone are enough to play Nomad and install already-published compatible mods through the in-game Mods menu. They are not, by themselves, a complete Unity/BasSDK development environment. The official community SDK workflow calls for Unity Editor and the matching Blade & Sorcery SDK, and Android/Nomad output must be built for the Android target.
 
