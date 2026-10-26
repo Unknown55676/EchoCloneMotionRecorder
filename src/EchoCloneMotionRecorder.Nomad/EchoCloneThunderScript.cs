@@ -13,17 +13,15 @@ namespace EchoCloneMotionRecorder.Nomad
         public static EchoCloneThunderScript Instance { get; private set; }
 
         [ModOption("Prototype Enabled", "Prototype switch only; gameplay features are not wired up yet.")]
-        public static bool PrototypeEnabled(bool value)
+        public static void PrototypeEnabled(bool value)
         {
             Debug.Log("[EchoClone] Prototype Enabled set to " + value + ". Gameplay integration is not implemented yet.");
-            return value;
         }
 
         [ModOption("Hostile Mode", "Placeholder setting. This does not make a clone hostile yet.")]
-        public static bool HostileMode(bool value)
+        public static void HostileMode(bool value)
         {
             Debug.Log("[EchoClone] Hostile Mode set to " + value + ". Combat integration is not implemented yet.");
-            return value;
         }
 
         public override void ScriptLoaded(ModManager.ModData modData)
