@@ -10,6 +10,8 @@ static class Program
         Run("cannot add frames before recording", CannotAddBeforeRecording);
         Run("records and samples midpoint", SamplesMidpoint);
         Run("rejects invalid and non-increasing timestamps", RejectsInvalidFrames);
+        Run("rejects missing or invalid weapon poses", RejectsInvalidWeaponPose);
+        Run("copies weapon poses safely", CopiesWeaponPose);
         Run("copies frames to prevent caller mutation", CopiesFrames);
         Run("exposes a read-only frame collection", FramesAreReadOnly);
         Run("clears recording", ClearsRecording);
@@ -55,6 +57,34 @@ static class Program
         Assert(!recording.TryAddFrame(Frame(2, 3)), "duplicate timestamp rejected");
         Assert(!recording.TryAddFrame(Frame(1, 1)), "out-of-order timestamp rejected");
         Assert(recording.FrameCount == 1, "invalid frames are not stored");
+    }
+
+    static void RejectsInvalidWeaponPose()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        var missingWeapon = Frame(0, 0);
+        missingWeapon.Weapon = null;
+        Assert(!recording.TryAddFrame(missingWeapon), "missing weapon pose rejected");
+
+        var invalidWeapon = Frame(1, 0);
+        invalidWeapon.Weapon.PositionY = float.NaN;
+        Assert(!recording.TryAddFrame(invalidWeapon), "non-finite weapon pose rejected");
+        Assert(recording.FrameCount == 0, "invalid weapon poses are not stored");
+    }
+
+    static void CopiesWeaponPose()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        var original = Frame(0, 4);
+        Assert(recording.TryAddFrame(original), "frame accepted");
+        original.Weapon.PositionX = 999;
+        Assert(recording.TrySample(0, out var sample), "sample exists");
+        Near(sample.Weapon.PositionX, 14, "stored weapon pose isolated from input mutation");
+        sample.Weapon.PositionX = -999;
+        Assert(recording.TrySample(0, out var secondSample), "second sample exists");
+        Near(secondSample.Weapon.PositionX, 14, "returned weapon pose isolated from stored data");
     }
 
     static void CopiesFrames()
