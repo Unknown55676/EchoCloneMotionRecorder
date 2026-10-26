@@ -1,24 +1,44 @@
 using ThunderRoad;
+using UnityEngine;
 
 namespace EchoCloneMotionRecorder.Nomad
 {
     /// <summary>
     /// Minimal game-side entry point for the Nomad integration.
-    /// This deliberately does not pretend to implement recording or clone control yet.
-    /// Build it only against the exact ThunderRoad/Unity references for the target game.
+    /// This prototype only verifies startup and exposes placeholder settings;
+    /// it does not yet record motion or spawn/control a clone.
     /// </summary>
     public sealed class EchoCloneThunderScript : ThunderScript
     {
+        public static EchoCloneThunderScript Instance { get; private set; }
+
+        [ModOption("Prototype Enabled", "Prototype switch only; gameplay features are not wired up yet.")]
+        public static bool PrototypeEnabled(bool value)
+        {
+            Debug.Log("[EchoClone] Prototype Enabled set to " + value + ". Gameplay integration is not implemented yet.");
+            return value;
+        }
+
+        [ModOption("Hostile Mode", "Placeholder setting. This does not make a clone hostile yet.")]
+        public static bool HostileMode(bool value)
+        {
+            Debug.Log("[EchoClone] Hostile Mode set to " + value + ". Combat integration is not implemented yet.");
+            return value;
+        }
+
         public override void ScriptLoaded(ModManager.ModData modData)
         {
-            // Keep startup side effects minimal until the target API references are supplied.
-            // Next integration step: register/verify ModOptions and connect the core recorder.
+            base.ScriptLoaded(modData);
+            Instance = this;
+            Debug.Log("[EchoClone] ThunderScript loaded for mod: " + modData.Name);
         }
 
         public override void ScriptUpdate()
         {
-            // Per-frame sampling will be added after the target game's player-pose API
-            // is compiled and verified against the matching Nomad assemblies.
+            base.ScriptUpdate();
+            // Pose sampling is intentionally not added until the target game's
+            // player tracking and creature-rig APIs are compiled against the
+            // exact Nomad assemblies.
         }
     }
 }
