@@ -17,6 +17,16 @@ dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csp
 
 The project intentionally fails with a clear error when those references are missing. A successful build only proves that the source compiles against the supplied references; it does not prove it loads or behaves correctly on Quest.
 
+## Create a ZIP after a successful build
+
+From the repository root in PowerShell, run:
+
+```powershell
+./tools/package-mod.ps1
+```
+
+The script checks the manifest and compiled plugin, then creates `artifacts/EchoCloneMotionRecorder-Nomad.zip` with the manifest and plugin DLL at the ZIP root. It deliberately refuses to package the game's proprietary DLLs. It cannot create a valid plugin DLL if the game references are missing, and the resulting ZIP is not considered verified until installed and tested in the target game.
+
 ## Current prototype
 
 The ThunderScript attempts to spawn a vanilla `HumanMale` NPC, record player head/hand transforms, and replay the recorded head path by moving the NPC root. It now also attempts best-effort retargeting to the spawned Unity humanoid Animator's Head, LeftHand, and RightHand bones when available. Recording timestamps use an accumulated monotonic recording clock.
