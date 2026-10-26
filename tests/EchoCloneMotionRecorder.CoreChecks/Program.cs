@@ -41,6 +41,7 @@ static class Program
         Assert(recording.TrySample(1, out var sample), "midpoint sample exists");
         Near(sample.Head.PositionX, 5, "position interpolated");
         Near(sample.Head.RotationW, 1, "rotation normalized");
+        Near(sample.Weapon.PositionX, 15, "weapon position interpolated");
         Near(recording.DurationSeconds, 2, "duration reflects last timestamp");
         Assert(!recording.TrySample(float.PositiveInfinity, out _), "infinite sample time rejected");
     }
@@ -94,7 +95,8 @@ static class Program
         TimeSeconds = time,
         Head = Pose(x, 0, 0, 1),
         LeftHand = Pose(x, 0, 0, 1),
-        RightHand = Pose(x, 0, 0, 1)
+        RightHand = Pose(x, 0, 0, 1),
+        Weapon = Pose(x + 10, 0, 0, 1)
     };
 
     static PoseSample Pose(float x, float y, float z, float w) => new()
