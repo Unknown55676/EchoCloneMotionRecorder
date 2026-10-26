@@ -1,6 +1,8 @@
 param(
     [string]$BuildConfiguration = "Release",
-    [string]$OutputDirectory = "artifacts"
+    [string]$OutputDirectory = "artifacts",
+    [ValidateSet("Contract", "Exact")]
+    [string]$ReferenceMode = "Contract"
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,13 +37,16 @@ Copy-Item $manifestPath (Join-Path $stagePath "manifest.json")
 Copy-Item $dllPath (Join-Path $stagePath "EchoCloneMotionRecorder.Nomad.dll")
 Copy-Item $coreDllPath (Join-Path $stagePath "EchoCloneMotionRecorder.dll")
 
-# Make the contract-build limitation visible so a test candidate is not mistaken
-# for a Quest-verified release.
+if ($ReferenceMode -eq "Exact") {
+    $referenceNote = "Build reference mode: user-supplied exact game reference assemblies."
+} else {
+    $referenceNote = "Build reference mode: build-only API contracts derived from documented public signatures. These are not official/version-matched game reference assemblies."
+}
+
 @"
 EchoClone Motion Recorder - build status
 Build target: Blade & Sorcery: Nomad
-This package was compiled with build-only API contract assemblies unless an exact game
-Managed directory was explicitly supplied to the build.
+$referenceNote
 The contract assemblies are not included in this package.
 This candidate has not been tested on a physical Quest or verified against the exact
 Nomad runtime. Do not describe it as Quest-tested until it is tested in-game.
@@ -62,4 +67,4 @@ Compress-Archive -Path (Join-Path $stagePath "*") -DestinationPath $zipPath -Com
 
 Write-Host "Created package: $zipPath"
 Write-Host "Contents: manifest.json, EchoCloneMotionRecorder.Nomad.dll, EchoCloneMotionRecorder.dll, BUILD_STATUS.txt"
-Write-Host "This is a contract-build candidate, not a Quest-verified release."
+Write-Host "Reference mode: $ReferenceMode. This candidate is not Quest-verified."
