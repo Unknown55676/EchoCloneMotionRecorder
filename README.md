@@ -16,15 +16,15 @@ A work-in-progress Blade & Sorcery: Nomad mod project for Meta Quest 3S.
 
 **This is not a playable or installable mod yet.**
 
-The repository contains a timestamped pose model for the head, left hand, right hand, and weapon; game-independent recording/playback sampling logic, including relative-time looping playback; validation and defensive-copy checks; and a minimal Nomad `ThunderScript` integration scaffold.
+The repository contains a timestamped pose model for the head, left hand, right hand, and weapon; game-independent recording/playback sampling logic; validation and core behavior checks; and an initial Nomad `ThunderScript` prototype. The prototype now includes a startup log, two placeholder ModOptions, and a manifest template. Those options only log their selected values; they do not spawn or control a clone.
 
 The scaffold is in [src/EchoCloneMotionRecorder.Nomad](src/EchoCloneMotionRecorder.Nomad/README.md). Its [build instructions](src/EchoCloneMotionRecorder.Nomad/BUILDING.md) explain how to supply the exact game's reference assemblies without committing proprietary DLLs to this public repository.
 
-The current source does not yet register the requested in-game controls, read Quest tracking, spawn NPCs, drive a humanoid rig, replay weapon handling, enable hostile AI, apply damage, or verify dismemberment. The plugin scaffold has **not** been compiled against the target game's assemblies or tested on Quest.
+The plugin has **not** been compiled against the target game's assemblies or tested on Quest. The current source does not yet read Quest tracking, spawn NPCs, drive a humanoid rig, replay weapon handling, enable hostile AI, apply damage, or verify dismemberment.
 
 ## Build requirements
 
-The October 2026 1.3.2 update notes include an SDK assembly-list change adding `Unity.XR.OpenXR`. A game plugin must use matching references and be built for Nomad/Android, not merely for PCVR. A generic .NET build alone is not enough. Do not commit proprietary game DLLs or reference assemblies to this public repository.
+A real Nomad plugin must use matching ThunderRoad and Unity reference assemblies. A generic .NET build of the recorder core is not proof that the game plugin compiles or loads. Do not commit proprietary game DLLs or reference assemblies to this public repository.
 
 ## Project docs
 
@@ -37,4 +37,4 @@ The October 2026 1.3.2 update notes include an SDK assembly-list change adding `
 
 ## Automated checks
 
-GitHub Actions checks required files, parses the project XML, builds the game-independent recorder core, and runs behavior checks for recording, sampling, validation, defensive copies, duration, playback looping, and playback boundaries. A green result is not proof that the plugin loads or works in-game.
+GitHub Actions checks required files, parses the project XML and manifest JSON, builds the game-independent recorder core, and runs its behavior checks. A green result is not proof that the plugin loads or works in-game.
