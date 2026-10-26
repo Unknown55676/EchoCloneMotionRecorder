@@ -3,7 +3,7 @@
 ## Target
 
 - Game: Blade & Sorcery: Nomad
-- Intended target: Nomad 1.0 (confirm the exact installed version before building)
+- Target reported by the user: Nomad `1.3.2.261012003` on Quest 3S
 - Headset: Meta Quest 3S
 
 ## Planned features
@@ -16,7 +16,7 @@
 
 ## Implementation stages
 
-1. **Motion data model** — store timestamped head and hand poses in a game-independent format.
+1. **Game-independent motion core (partially complete)** — store timestamped head, left-hand, right-hand, and weapon poses; validate timestamps and finite values; copy frames safely; interpolate samples. Automated core checks cover these behaviors.
 2. **SDK verification** — identify the exact supported Nomad SDK/reference assemblies and verify the scripting lifecycle and options API.
 3. **Recording** — sample XR poses at a stable rate, define coordinate-space conversions, and save/load recordings.
 4. **NPC spawning** — spawn a vanilla human NPC through the supported API.
@@ -27,7 +27,7 @@
 
 ## Important limitations
 
-This repository is not yet a playable mod. The data model alone does not access XR tracking, spawn NPCs, drive a humanoid rig, add a book page, enable combat, or implement dismemberment.
+This repository is not yet a playable mod. The game-independent recorder core does not access XR tracking, spawn NPCs, drive a humanoid rig, add a book page, enable combat, or implement dismemberment. The core has not yet been compiled against the Nomad SDK or tested in-game.
 
 The exact API depends on the installed game version and its matching SDK. Do not guess method names or ship placeholder calls as working game integration. Do not commit proprietary game DLLs or reference assemblies to a public repository.
 
