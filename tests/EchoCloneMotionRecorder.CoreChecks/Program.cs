@@ -9,6 +9,7 @@ static class Program
     {
         Run("cannot add frames before recording", CannotAddBeforeRecording);
         Run("records and samples midpoint", SamplesMidpoint);
+        Run("interpolates equivalent opposite-sign quaternions safely", InterpolatesEquivalentQuaternionSigns);
         Run("rejects invalid and non-increasing timestamps", RejectsInvalidFrames);
         Run("rejects missing or invalid weapon poses", RejectsInvalidWeaponPose);
         Run("copies weapon poses safely", CopiesWeaponPose);
@@ -53,6 +54,25 @@ static class Program
         Near(sample.Weapon.PositionX, 15, "weapon position interpolated");
         Near(recording.DurationSeconds, 2, "duration reflects last timestamp");
         Assert(!recording.TrySample(float.PositiveInfinity, out _), "infinite sample time rejected");
+    }
+
+    static void InterpolatesEquivalentQuaternionSigns()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+
+        var first = Frame(0, 0);
+        first.Head.RotationZ = 1f;
+        first.Head.RotationW = 0f;
+        var second = Frame(2, 0);
+        second.Head.RotationZ = -1f;
+        second.Head.RotationW = 0f;
+
+        Assert(recording.TryAddFrame(first), "first quaternion frame accepted");
+        Assert(recording.TryAddFrame(second), "equivalent opposite-sign quaternion frame accepted");
+        Assert(recording.TrySample(1, out var sample), "midpoint quaternion sample exists");
+        Near(sample.Head.RotationZ, 1f, "interpolation preserves the same 180-degree orientation");
+        Near(sample.Head.RotationW, 0f, "interpolation avoids collapsing to a zero quaternion");
     }
 
     static void RejectsInvalidFrames()
