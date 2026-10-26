@@ -9,33 +9,44 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <!-- Set NOMAD_GAME_MANAGED_DIR to the installed game's Managed assembly directory.
-       Do not commit proprietary game DLLs to this repository. -->
+  <!--
+    Default phone-only/cloud build mode uses build-only reference contracts. They
+    are never packaged. To compile against locally supplied game references instead,
+    pass -p:UseNomadApiContracts=false -p:NomadManagedDir=/path/to/managed.
+  -->
   <PropertyGroup>
     <NomadManagedDir Condition="'$(NomadManagedDir)' == ''">$(NOMAD_GAME_MANAGED_DIR)</NomadManagedDir>
+    <UseNomadApiContracts Condition="'$(UseNomadApiContracts)' == '' and '$(NomadManagedDir)' == ''">true</UseNomadApiContracts>
+    <UseNomadApiContracts Condition="'$(UseNomadApiContracts)' == '' and '$(NomadManagedDir)' != ''">false</UseNomadApiContracts>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('$(NomadManagedDir)/ThunderRoad.dll')">
+  <ItemGroup Condition="'$(UseNomadApiContracts)' == 'true'">
+    <ProjectReference Include="../../build/contracts/UnityEngine.CoreModule/UnityEngine.CoreModule.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="../../build/contracts/ThunderRoad/ThunderRoad.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseNomadApiContracts)' != 'true'">
     <Reference Include="ThunderRoad">
       <HintPath>$(NomadManagedDir)/ThunderRoad.dll</HintPath>
       <Private>false</Private>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup Condition="Exists('$(NomadManagedDir)/UnityEngine.CoreModule.dll')">
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(NomadManagedDir)/UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
 
-  <Target Name="RequireNomadReferences" BeforeTargets="ResolveReferences">
+  <Target Name="RequireNomadReferences" BeforeTargets="CoreCompile" Condition="'$(UseNomadApiContracts)' != 'true'">
     <Error Condition="'$(NomadManagedDir)' == ''"
-           Text="Set NOMAD_GAME_MANAGED_DIR (or -p:NomadManagedDir=...) to the exact target game's Managed assembly directory. The Nomad plugin cannot be built against guessed references." />
+           Text="Set NOMAD_GAME_MANAGED_DIR (or -p:NomadManagedDir=...) to the matching target game's Managed assembly directory." />
     <Error Condition="!Exists('$(NomadManagedDir)/ThunderRoad.dll')"
            Text="ThunderRoad.dll was not found in NomadManagedDir." />
     <Error Condition="!Exists('$(NomadManagedDir)/UnityEngine.CoreModule.dll')"
