@@ -14,6 +14,8 @@ static class Program
         Run("copies weapon poses safely", CopiesWeaponPose);
         Run("copies frames to prevent caller mutation", CopiesFrames);
         Run("exposes a read-only frame collection", FramesAreReadOnly);
+        Run("frame snapshots cannot mutate the recording", FrameSnapshotsAreIsolated);
+        Run("duration uses the first frame as its origin", DurationUsesFirstTimestamp);
         Run("clears recording", ClearsRecording);
         return 0;
     }
@@ -107,6 +109,29 @@ static class Program
         recording.Start();
         Assert(recording.TryAddFrame(Frame(0, 4)), "frame accepted");
         Assert(recording.Frames is IList list && list.IsReadOnly, "public frames collection reports itself read-only");
+    }
+
+    static void FrameSnapshotsAreIsolated()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(5, 7)), "frame accepted");
+        var snapshot = recording.Frames[0];
+        snapshot.Head.PositionX = 500;
+        snapshot.Weapon.PositionX = 600;
+        Assert(recording.TrySample(5, out var sampled), "stored frame remains sampleable");
+        Near(sampled.Head.PositionX, 7, "frame collection snapshot cannot mutate head pose");
+        Near(sampled.Weapon.PositionX, 17, "frame collection snapshot cannot mutate weapon pose");
+    }
+
+    static void DurationUsesFirstTimestamp()
+    {
+        var recording = new MotionRecording();
+        recording.Start();
+        Assert(recording.TryAddFrame(Frame(5, 0)), "first frame accepted");
+        Near(recording.DurationSeconds, 0, "single frame has zero duration");
+        Assert(recording.TryAddFrame(Frame(8, 3)), "second frame accepted");
+        Near(recording.DurationSeconds, 3, "duration is last timestamp minus first timestamp");
     }
 
     static void ClearsRecording()
