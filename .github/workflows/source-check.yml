@@ -25,6 +25,7 @@ jobs:
           test -f README.md
           test -f docs/TECHNICAL_PLAN.md
           test -f docs/QUEST_ONLY_WORKFLOW.md
+          test -f docs/REMOTE_BUILD_AND_DEVICE_CONNECTION.md
           test -f src/EchoCloneMotionRecorder/MotionFrame.cs
           test -f src/EchoCloneMotionRecorder/MotionRecording.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/Program.cs
