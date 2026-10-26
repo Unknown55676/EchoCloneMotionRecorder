@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>EchoCloneMotionRecorder.Nomad</AssemblyName>
+    <RootNamespace>EchoCloneMotionRecorder.Nomad</RootNamespace>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <!-- Set NOMAD_GAME_MANAGED_DIR to the installed game's Managed assembly directory.
+       Do not commit proprietary game DLLs to this repository. -->
+  <PropertyGroup>
+    <NomadManagedDir Condition="'$(NomadManagedDir)' == ''">$(NOMAD_GAME_MANAGED_DIR)</NomadManagedDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(NomadManagedDir)/ThunderRoad.dll')">
+    <Reference Include="ThunderRoad">
+      <HintPath>$(NomadManagedDir)/ThunderRoad.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(NomadManagedDir)/UnityEngine.CoreModule.dll')">
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(NomadManagedDir)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="RequireNomadReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="'$(NomadManagedDir)' == ''"
+           Text="Set NOMAD_GAME_MANAGED_DIR (or -p:NomadManagedDir=...) to the exact target game's Managed assembly directory. The Nomad plugin cannot be built against guessed references." />
+    <Error Condition="!Exists('$(NomadManagedDir)/ThunderRoad.dll')"
+           Text="ThunderRoad.dll was not found in NomadManagedDir." />
+    <Error Condition="!Exists('$(NomadManagedDir)/UnityEngine.CoreModule.dll')"
+           Text="UnityEngine.CoreModule.dll was not found in NomadManagedDir." />
+  </Target>
+</Project>
