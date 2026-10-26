@@ -1,0 +1,12 @@
+bin/
+obj/
+Build/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.pdb
+
+# Do not commit proprietary game/SDK reference assemblies.
+GameReferences/
