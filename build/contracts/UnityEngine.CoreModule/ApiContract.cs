@@ -67,7 +67,7 @@ namespace UnityEngine
         }
 
         public static Quaternion identity { get; }
-        public Vector3 eulerAngles { get; }
+        public Vector3 eulerAngles { get { return default(Vector3); } }
         public static Quaternion Euler(float x, float y, float z) { return default(Quaternion); }
         public static Quaternion Inverse(Quaternion rotation) { return default(Quaternion); }
         public static Quaternion operator *(Quaternion left, Quaternion right) { return default(Quaternion); }
