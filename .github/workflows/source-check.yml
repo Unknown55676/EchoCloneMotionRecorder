@@ -18,7 +18,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Check required project files
+      - name: Check required project files and project XML
         shell: bash
         run: |
           set -euo pipefail
@@ -31,9 +31,18 @@ jobs:
           test -f src/EchoCloneMotionRecorder/MotionPlayback.cs
           test -f docs/SDK_INTEGRATION_NOTES.md
           test -f src/EchoCloneMotionRecorder.Nomad/README.md
+          test -f src/EchoCloneMotionRecorder.Nomad/BUILDING.md
+          test -f src/EchoCloneMotionRecorder.Nomad/EchoCloneThunderScript.cs
+          test -f src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj
           test -f tests/EchoCloneMotionRecorder.CoreChecks/Program.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/EchoCloneMotionRecorder.CoreChecks.csproj
-          echo "Required source, test, and planning files are present."
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          ET.parse("src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj")
+          ET.parse("src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj")
+          print("Project XML parses successfully.")
+          PY
+          echo "Required source, test, and integration files are present."
 
       - name: Build game-independent recorder core
         run: dotnet build src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj --configuration Release
