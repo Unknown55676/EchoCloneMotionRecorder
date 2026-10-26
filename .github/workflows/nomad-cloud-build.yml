@@ -1,0 +1,69 @@
+name: Nomad cloud build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - ".github/workflows/nomad-cloud-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  core-checks:
+    name: Build and test game-independent core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Build core
+        run: dotnet build src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj --configuration Release
+      - name: Run core checks
+        run: dotnet run --project tests/EchoCloneMotionRecorder.CoreChecks/EchoCloneMotionRecorder.CoreChecks.csproj --configuration Release
+
+  nomad-plugin:
+    name: Compile Nomad plugin and package mod
+    runs-on: ubuntu-latest
+    if: ${{ secrets.NOMAD_THUNDERROAD_DLL_B64 != '' && secrets.NOMAD_UNITYENGINE_COREMODULE_DLL_B64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Restore private game references from repository secrets
+        env:
+          THUNDERROAD_DLL_B64: ${{ secrets.NOMAD_THUNDERROAD_DLL_B64 }}
+          UNITY_DLL_B64: ${{ secrets.NOMAD_UNITYENGINE_COREMODULE_DLL_B64 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/nomad-managed"
+          printf '%s' "$THUNDERROAD_DLL_B64" | base64 --decode > "$RUNNER_TEMP/nomad-managed/ThunderRoad.dll"
+          printf '%s' "$UNITY_DLL_B64" | base64 --decode > "$RUNNER_TEMP/nomad-managed/UnityEngine.CoreModule.dll"
+          test -s "$RUNNER_TEMP/nomad-managed/ThunderRoad.dll"
+          test -s "$RUNNER_TEMP/nomad-managed/UnityEngine.CoreModule.dll"
+      - name: Build Nomad plugin against supplied game assemblies
+        run: dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj --configuration Release -p:NomadManagedDir="$RUNNER_TEMP/nomad-managed"
+      - name: Package installable ZIP
+        shell: pwsh
+        run: ./tools/package-mod.ps1 -Configuration Release
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EchoCloneMotionRecorder-Nomad
+          path: artifacts/EchoCloneMotionRecorder-Nomad.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  explain-missing-game-files:
+    name: Explain why game plugin build was skipped
+    runs-on: ubuntu-latest
+    if: ${{ secrets.NOMAD_THUNDERROAD_DLL_B64 == '' || secrets.NOMAD_UNITYENGINE_COREMODULE_DLL_B64 == '' }}
+    steps:
+      - name: Explain required private references
+        run: |
+          echo "::notice::Core build/tests can run without a PC. The Nomad plugin build was skipped because private game assemblies are missing."
+          echo "Add repository Actions secrets NOMAD_THUNDERROAD_DLL_B64 and NOMAD_UNITYENGINE_COREMODULE_DLL_B64 containing base64-encoded DLL files from the exact target game version."
+          echo "Do not commit or publish proprietary game DLLs. No installable mod ZIP is produced by this run."
