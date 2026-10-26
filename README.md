@@ -14,17 +14,26 @@ A work-in-progress Blade & Sorcery: Nomad mod project for Meta Quest 3S.
 
 ## Current status
 
-**This is not a playable or installable mod yet.**
+**The first gameplay integration is now written, but it is not yet a verified installable mod.**
 
-The repository contains a timestamped pose model for the head, left hand, right hand, and weapon; game-independent recording/playback sampling logic; validation and core behavior checks; and an initial Nomad `ThunderScript` prototype. The prototype now includes a startup log, two placeholder ModOptions, and a manifest template. Those options only log their selected values; they do not spawn or control a clone.
+The Nomad ThunderScript now has ModOptions actions to:
+- spawn a vanilla `HumanMale` creature using the game's creature catalog,
+- record the player's head and both hand transforms at roughly 20 samples per second,
+- stop and keep a recording,
+- play the recording by replaying the recorded head path as movement of the spawned creature root,
+- toggle a logged prototype hostile-mode flag.
 
-The scaffold is in [src/EchoCloneMotionRecorder.Nomad](src/EchoCloneMotionRecorder.Nomad/README.md). Its [build instructions](src/EchoCloneMotionRecorder.Nomad/BUILDING.md) explain how to supply the exact game's reference assemblies without committing proprietary DLLs to this public repository.
+Important limitations:
+- The recorded weapon pose is currently a placeholder copied from the right-hand pose.
+- Playback moves the NPC root along the recorded head path. It does **not** retarget the NPC's head/arms/hands to the recorded poses, and it does not replay weapon handling.
+- Hostile Mode is only a flag; faction changes, AI, damage behavior, and native dismemberment have not been implemented.
+- The plugin has not yet been compiled against the target Nomad assemblies or tested on Quest.
 
-The plugin has **not** been compiled against the target game's assemblies or tested on Quest. The current source does not yet read Quest tracking, spawn NPCs, drive a humanoid rig, replay weapon handling, enable hostile AI, apply damage, or verify dismemberment.
+The source and [build instructions](src/EchoCloneMotionRecorder.Nomad/BUILDING.md) require the exact game's reference assemblies. Do not commit proprietary game DLLs or reference assemblies to this public repository.
 
 ## Build requirements
 
-A real Nomad plugin must use matching ThunderRoad and Unity reference assemblies. A generic .NET build of the recorder core is not proof that the game plugin compiles or loads. Do not commit proprietary game DLLs or reference assemblies to this public repository.
+A real Nomad plugin must use matching ThunderRoad and Unity reference assemblies. A generic .NET build of the recorder core is not proof that the plugin compiles or loads. Do not package or publish the plugin as a completed mod until the game-side project builds and it is tested in Nomad.
 
 ## Project docs
 
@@ -37,4 +46,4 @@ A real Nomad plugin must use matching ThunderRoad and Unity reference assemblies
 
 ## Automated checks
 
-GitHub Actions checks required files, parses the project XML and manifest JSON, builds the game-independent recorder core, and runs its behavior checks. A green result is not proof that the plugin loads or works in-game.
+GitHub Actions checks required files, parses project XML and manifest JSON, builds the game-independent recorder core, and runs its behavior checks. A green result is not proof that the game plugin compiles or works in-game.
