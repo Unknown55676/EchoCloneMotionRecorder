@@ -61,12 +61,24 @@ The spawn callback must be checked for null, and the clone must be tracked for c
 
 The public examples above do **not** establish a safe way to map recorded headset/controller/weapon poses onto a normal NPC's animated and physics-driven rig. This is a separate integration problem. Simply setting a creature root transform would not reproduce head, hands, weapon handling, attacks, or native dismemberment.
 
-Before coding the adapter, confirm exact types and signatures for:
-- the local player's head and hand transforms in the target build;
-- how the currently held weapon/handle is found;
-- the game's supported update/tick lifecycle;
-- creature ragdoll/animation control and cleanup;
-- AI faction/targeting and damage behavior.
+Additional source inspection has now verified these useful integration points in public mod code and the BasSDK guide:
+- player head pose is accessed as `Player.local.head.transform`;
+- hand poses are accessed as `Player.local.handLeft.transform` and `Player.local.handRight.transform` (some code uses `Player.local.creature.handLeft.transform` for creature-hand details);
+- `ThunderScript` provides `ScriptUpdate`, `ScriptFixedUpdate`, and `ScriptLateUpdate`; the guide describes `ScriptLateUpdate` as running after animation/IK, which matters for pose retargeting;
+- a held handle can be obtained in some contexts through `creature.equipment.GetHeldHandle(Side.Left/Right)`, but the precise item/weapon transform and handedness logic still needs a tested implementation;
+- `Creature.ragdoll.SetState(Ragdoll.State.Destabilized)` is used by public mods, but it is not evidence that arbitrary recorded poses can safely drive a full ragdoll.
+
+Sources:
+- https://kospy.github.io/BasSDK/Components/Guides/ThunderScript/
+- https://github.com/OWODevelopers/OWO_BladeAndSorcery/blob/fe917dd94f3b985317390fc00af47ca657719c12/OWO_BladeAndSorcery.cs
+- https://github.com/Kingo64/TheOuterRim/blob/master/ItemBlaster.cs
+- https://github.com/lyneca/dire-wand/blob/main/Modules/Push.cs
+
+Still to confirm from a matching SDK build and actual in-game test:
+- how to retarget the NPC's head, hands, and weapon without fighting the game's animator/physics;
+- which weapon transform should be recorded and how to spawn/equip a matching weapon on the clone;
+- AI faction/targeting and damage behavior;
+- reliable cleanup when the level changes or the clone is killed/despawned.
 
 Do not guess an API name or claim dismemberment works just because an NPC can spawn.
 
