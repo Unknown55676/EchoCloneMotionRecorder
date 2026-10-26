@@ -1,43 +1,58 @@
 # Building the Nomad plugin
 
-## Required references
+## Phone-only/cloud build
 
-Use reference assemblies from the exact target installation of Blade & Sorcery: Nomad. Do not substitute PCVR assemblies and do not commit proprietary game DLLs to this public repository.
+The default project configuration can now compile without private game DLLs. It uses small build-only reference contracts for the Unity/ThunderRoad types that must appear in the plugin's metadata, and the gameplay code resolves player, catalog, and creature APIs reflectively at runtime.
 
-Set `NOMAD_GAME_MANAGED_DIR` to the directory containing at least:
-
-- `ThunderRoad.dll`
-- `UnityEngine.CoreModule.dll`
-
-Then build with the .NET SDK:
+From the repository root:
 
 ```sh
-dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj -c Release
+dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj -c Release -p:UseNomadApiContracts=true
 ```
 
-The project intentionally fails with a clear error when those references are missing. A successful build only proves that the source compiles against the supplied references; it does not prove it loads or behaves correctly on Quest.
+Those contract assemblies live under `build/contracts/`. They are **compiler-only**; the package script does not ship them. The contracts describe only the small API surface needed to compile and are not a substitute for the official, exact-version Nomad scripting references. This removes the build-time dependency blocker, but it does not prove that the resulting plugin can be loaded or that every runtime API is compatible.
 
-## Create a ZIP after a successful build
+The `Nomad cloud build` GitHub Actions workflow builds the motion core and plugin, packages a test candidate, and publishes it as the `EchoCloneMotionRecorder-Nomad-candidate` artifact. The candidate is not Quest-verified.
 
-From the repository root in PowerShell, run:
+## Build against supplied game references
+
+If a matching reference set is legitimately available, use:
+
+```sh
+dotnet build src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj -c Release -p:UseNomadApiContracts=false -p:NomadManagedDir=/path/to/managed
+```
+
+The directory must contain `ThunderRoad.dll` and `UnityEngine.CoreModule.dll`. Do not assume PCVR assemblies are equivalent to the target Nomad scripting runtime, and do not commit or distribute proprietary game DLLs.
+
+## Package after a successful build
+
+From the repository root in PowerShell:
 
 ```powershell
-./tools/package-mod.ps1
+./tools/package-mod.ps1 -BuildConfiguration Release -ReferenceMode Contract
 ```
 
-The script checks the manifest and compiled plugin, then creates `artifacts/EchoCloneMotionRecorder-Nomad.zip` with the manifest and plugin DLL at the ZIP root. It deliberately refuses to package the game's proprietary DLLs. It cannot create a valid plugin DLL if the game references are missing, and the resulting ZIP is not considered verified until installed and tested in the target game.
+Use `-ReferenceMode Exact` only when the plugin really was built against supplied game references.
+
+The script validates the manifest and includes:
+- `manifest.json`
+- `EchoCloneMotionRecorder.Nomad.dll`
+- `EchoCloneMotionRecorder.dll` (the recorder-core dependency)
+- `BUILD_STATUS.txt`
+
+The script refuses to package either build-only contract DLL or proprietary game DLLs. It does not certify runtime compatibility.
 
 ## Current prototype
 
-The ThunderScript attempts to spawn a vanilla `HumanMale` NPC, record player head/hand transforms, and replay the recorded head path by moving the NPC root. It now also attempts best-effort retargeting to the spawned Unity humanoid Animator's Head, LeftHand, and RightHand bones when available. Recording timestamps use an accumulated monotonic recording clock.
+The ThunderScript attempts to spawn a vanilla `HumanMale` NPC, record player head and hand/controller transforms, and replay the recorded head path by moving the NPC root. It also makes a best-effort attempt to retarget the spawned humanoid's Head, LeftHand, and RightHand bones during playback. Runtime access to player, catalog, creature-data, and animator members is reflective to reduce compile-time binding to unverified implementation details.
 
-The bone transforms are set during the ThunderScript update. The game's animation and ragdoll update order may overwrite them or cause poor physics; this is experimental until tested on the exact Nomad build.
+The bone transforms are set during the ThunderScript update. The game's animation and ragdoll update order may overwrite them or cause poor physics; this remains experimental until tested on the exact Nomad build.
 
 ## Remaining major features
 
 - The weapon pose is still a right-hand placeholder; actual held-item detection and weapon replay are not implemented.
 - Hostile Mode still only toggles a flag; faction/AI behavior is not connected.
 - Reliable player damage and native dismemberment are not implemented or verified.
-- The exact target game assemblies have not been used to compile this source, and no in-game Quest test has been completed.
+- The exact target game's runtime behavior has not been validated on Quest.
 
-Do not package or publish this prototype as a completed mod until the game-side project builds and it has been tested in Nomad.
+Do not publish the candidate as a completed or Quest-tested mod until it has been installed and tested in Nomad.
