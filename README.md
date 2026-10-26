@@ -6,44 +6,45 @@ A work-in-progress Blade & Sorcery: Nomad mod project for Meta Quest 3S.
 
 ## Planned features
 
-- In-game controls: Spawn EchoClone, Record, Stop Recording, Playback, and Hostile Mode On/Off.
+- In-game controls: Spawn EchoClone, Record, Stop Recording, Playback, and Hostile Mode.
 - Record head, hand/controller, and weapon motion.
-- Spawn a vanilla human NPC and replay recorded motion.
+- Spawn a vanilla human NPC and replay recorded movement.
 - Let the clone attack and damage the player.
-- Support the game's native dismemberment system.
+- Use the game's native dismemberment system.
 
 ## Current status
 
-**The first gameplay integration is now written, but it is not yet a verified installable mod.**
+The gameplay prototype and a cloud compile path are now in the repository. The default cloud build uses build-only contract assemblies instead of requiring private game DLLs, and the code resolves player tracking, catalog, creature spawning, and Animator bone APIs reflectively. That allows GitHub Actions to attempt a full plugin compile and make a candidate ZIP without a PC on the user's side.
 
-The Nomad ThunderScript now has ModOptions actions to:
-- spawn a vanilla `HumanMale` creature using the game's creature catalog,
-- record the player's head and both hand transforms at roughly 20 samples per second,
-- stop and keep a recording,
-- play the recording by replaying the recorded head path as movement of the spawned creature root,
-- toggle a logged prototype hostile-mode flag.
+**This is a build candidate, not a verified Quest release.** The small compile contracts are not official exact-version Nomad assemblies and are never included in the package; a successful compile does not establish that the game will load the plugin.
 
-Important limitations:
-- The recorded weapon pose is currently a placeholder copied from the right-hand pose.
-- Playback moves the NPC root along the recorded head path. It does **not** retarget the NPC's head/arms/hands to the recorded poses, and it does not replay weapon handling.
-- Hostile Mode is only a flag; faction changes, AI, damage behavior, and native dismemberment have not been implemented.
-- The plugin has not yet been compiled against the target Nomad assemblies or tested on Quest.
+Implemented in source:
+- ModOptions entry points for spawn, record, stop, playback, and a logged hostile-mode flag.
+- Player head/hand pose sampling at about 20 samples per second.
+- Motion recording/playback core with checks.
+- Vanilla-human spawn attempt and root-motion playback.
+- Experimental humanoid head/hand bone retargeting.
 
-The source and [build instructions](src/EchoCloneMotionRecorder.Nomad/BUILDING.md) require the exact game's reference assemblies. Do not commit proprietary game DLLs or reference assemblies to this public repository.
+Remaining or not verified:
+- Actual held-weapon recording and replay.
+- Real hostile AI/faction changes.
+- Reliable player damage.
+- Native dismemberment.
+- In-game compatibility and physics/animation interaction on the target Quest build.
 
-## Build requirements
+## Build and artifact
 
-A real Nomad plugin must use matching ThunderRoad and Unity reference assemblies. A generic .NET build of the recorder core is not proof that the plugin compiles or loads. Do not package or publish the plugin as a completed mod until the game-side project builds and it is tested in Nomad.
+GitHub Actions workflow: [Nomad cloud build](.github/workflows/nomad-cloud-build.yml)
+
+On successful workflow completion, download the `EchoCloneMotionRecorder-Nomad-candidate` artifact from the repository's [Actions page](https://github.com/Unknown55676/EchoCloneMotionRecorder/actions). The package contains the mod manifest, plugin DLL, core dependency DLL, and a build-status note. Do not upload it as a verified release until it has been tested in Nomad.
 
 ## Project docs
 
 - [Technical plan](docs/TECHNICAL_PLAN.md)
 - [Quest 3S + iPhone workflow](docs/QUEST_ONLY_WORKFLOW.md)
 - [SDK integration notes](docs/SDK_INTEGRATION_NOTES.md)
-- [Remote build and Quest connection gates](docs/REMOTE_BUILD_AND_DEVICE_CONNECTION.md)
-- [Nomad plugin scaffold](src/EchoCloneMotionRecorder.Nomad/README.md)
+- [Nomad IL2CPP reference status](docs/NOMAD_IL2CPP_REFERENCE_STATUS.md)
+- [Nomad plugin source notes](src/EchoCloneMotionRecorder.Nomad/README.md)
 - [Plugin build instructions](src/EchoCloneMotionRecorder.Nomad/BUILDING.md)
 
-## Automated checks
-
-GitHub Actions checks required files, parses project XML and manifest JSON, builds the game-independent recorder core, and runs its behavior checks. A green result is not proof that the game plugin compiles or works in-game.
+GitHub Actions checks the motion core, source files, project XML, contracts, and the plugin compile candidate. A green build is not proof of in-game compatibility.
