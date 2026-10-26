@@ -30,19 +30,30 @@ jobs:
           test -f src/EchoCloneMotionRecorder/MotionRecording.cs
           test -f src/EchoCloneMotionRecorder/MotionPlayback.cs
           test -f docs/SDK_INTEGRATION_NOTES.md
+          test -f docs/NOMAD_IL2CPP_REFERENCE_STATUS.md
           test -f src/EchoCloneMotionRecorder.Nomad/README.md
           test -f src/EchoCloneMotionRecorder.Nomad/BUILDING.md
           test -f src/EchoCloneMotionRecorder.Nomad/EchoCloneThunderScript.cs
           test -f src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj
           test -f src/EchoCloneMotionRecorder.Nomad/manifest.json
+          test -f build/contracts/UnityEngine.CoreModule/UnityEngine.CoreModule.csproj
+          test -f build/contracts/UnityEngine.CoreModule/ApiContract.cs
+          test -f build/contracts/ThunderRoad/ThunderRoad.csproj
+          test -f build/contracts/ThunderRoad/ApiContract.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/Program.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/EchoCloneMotionRecorder.CoreChecks.csproj
           python3 - <<'PY'
           import json
           import xml.etree.ElementTree as ET
 
-          ET.parse("src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj")
-          ET.parse("src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj")
+          projects = (
+              "src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj",
+              "src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj",
+              "build/contracts/UnityEngine.CoreModule/UnityEngine.CoreModule.csproj",
+              "build/contracts/ThunderRoad/ThunderRoad.csproj",
+          )
+          for project in projects:
+              ET.parse(project)
           with open("src/EchoCloneMotionRecorder.Nomad/manifest.json", encoding="utf-8") as file:
               manifest = json.load(file)
           required = ("Name", "Description", "Author", "ModVersion", "GameVersion")
@@ -51,9 +62,7 @@ jobs:
               raise SystemExit("Manifest missing required fields: " + ", ".join(missing))
           print("Project XML and manifest JSON parse successfully.")
 
-          # Guard the game-side integration against accidentally reverting to a
-          # logging-only scaffold. This is a source check, not a substitute for
-          # compiling against the proprietary target-game assemblies.
+          # This validates source coverage, not in-game or exact SDK compatibility.
           with open("src/EchoCloneMotionRecorder.Nomad/EchoCloneThunderScript.cs", encoding="utf-8") as file:
               plugin = file.read()
           required_plugin_tokens = (
@@ -62,18 +71,18 @@ jobs:
               "StopRecordingOption",
               "PlaybackOption",
               "HostileModeOption",
-              "Catalog.GetData<CreatureData>",
-              ".SpawnAsync(",
+              "GetCatalogData",
+              "SpawnAsync",
               "recording.TryAddFrame(frame)",
               "playback.TryGetCurrentFrame",
-              "Player.local",
+              "TryGetPlayerTransforms",
           )
           missing_plugin_tokens = [token for token in required_plugin_tokens if token not in plugin]
           if missing_plugin_tokens:
               raise SystemExit("Nomad gameplay source missing: " + ", ".join(missing_plugin_tokens))
-          print("Nomad gameplay source contains spawn, recording, playback, and option entry points.")
+          print("Nomad source contains options, reflective spawn, recording, playback, and player-tracking paths.")
           PY
-          echo "Required source, test, and integration files are present."
+          echo "Required source, tests, contracts, and project XML are present."
 
       - name: Build game-independent recorder core
         run: dotnet build src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj --configuration Release
