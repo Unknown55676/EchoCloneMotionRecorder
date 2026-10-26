@@ -23,3 +23,5 @@ The motion data class does not yet read Quest tracking, spawn NPCs, drive a huma
 A working build needs the matching Nomad SDK/reference assemblies and a compatible build setup. A generic .NET build alone is not enough. Do not commit proprietary game DLLs or reference assemblies to this public repository.
 
 See [docs/TECHNICAL_PLAN.md](docs/TECHNICAL_PLAN.md) for implementation stages and acceptance criteria.
+
+For the iPhone + Quest-only workflow and the requirements before the mod can be installed, see [docs/QUEST_ONLY_WORKFLOW.md](docs/QUEST_ONLY_WORKFLOW.md).
