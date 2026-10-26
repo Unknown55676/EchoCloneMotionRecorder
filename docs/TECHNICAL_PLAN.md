@@ -16,11 +16,11 @@
 
 ## Implementation stages
 
-1. **Game-independent motion core (partially complete)** — store timestamped head, left-hand, right-hand, and weapon poses; validate timestamps and finite values; copy frames safely; interpolate samples. Automated core checks cover these behaviors.
+1. **Game-independent motion core (partially complete)** — store timestamped head, left-hand, right-hand, and weapon poses; validate timestamps and finite values; return isolated frame snapshots; calculate duration relative to the first sample; interpolate poses; and advance playback with optional looping. Automated core checks cover these behaviors.
 2. **SDK verification** — identify the exact supported Nomad SDK/reference assemblies and verify the scripting lifecycle and options API.
-3. **Recording** — sample XR poses at a stable rate, define coordinate-space conversions, and save/load recordings.
+3. **Recording** — sample XR poses at a stable rate, define coordinate-space conversions, and add durable save/load recordings.
 4. **NPC spawning** — spawn a vanilla human NPC through the supported API.
-5. **Playback/retargeting** — map recorded poses to the NPC rig using supported animation or ragdoll APIs.
+5. **Playback/retargeting** — connect the tested game-independent playback clock to supported animation or ragdoll APIs and map recorded poses to the NPC rig.
 6. **Combat** — implement a real hostile toggle and verify attacks cause normal game damage.
 7. **Dismemberment** — verify the spawned creature supports native slicing.
 8. **UI and headset testing** — add the five controls, test each feature on Quest, and package for Nomad.
