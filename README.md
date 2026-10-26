@@ -16,7 +16,7 @@ A work-in-progress Blade & Sorcery: Nomad mod project for Meta Quest 3S.
 
 **This is not a playable or installable mod yet.**
 
-The repository contains a timestamped pose model for the head, left hand, right hand, and weapon; game-independent recording/playback sampling logic; validation and defensive-copy checks; a technical plan; SDK integration notes; and a GitHub Actions workflow. The workflow builds the core and runs dependency-free behavior checks.
+The repository contains a timestamped pose model for the head, left hand, right hand, and weapon; game-independent recording/playback sampling logic, including relative-time looping playback; validation and defensive-copy checks; a technical plan; SDK integration notes; and a GitHub Actions workflow. The workflow builds the core and runs dependency-free behavior checks.
 
 The current source does not read Quest tracking, spawn NPCs, drive a humanoid rig, add the in-game book controls, enable hostile AI, apply damage, or verify dismemberment. Those features require integration with the exact SDK and APIs for the installed Nomad version.
 
@@ -33,4 +33,4 @@ The October 2026 1.3.2 update notes include an SDK assembly-list change adding `
 
 ## Automated checks
 
-GitHub Actions checks required files, builds the game-independent recorder core, and runs basic behavior checks for recording, sampling, validation, and clearing. See [Source validation workflow](.github/workflows/source-check.yml). A green result is not proof that the mod loads or works in-game.
+GitHub Actions checks required files, builds the game-independent recorder core, and runs behavior checks for recording, sampling, validation, defensive copies, duration, playback looping, and playback boundaries. See [Source validation workflow](.github/workflows/source-check.yml). A green result is not proof that the mod loads or works in-game.
