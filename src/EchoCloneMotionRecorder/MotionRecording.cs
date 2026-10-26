@@ -96,7 +96,8 @@ namespace EchoCloneMotionRecorder
                     TimeSeconds = timeSeconds,
                     Head = Interpolate(left.Head, right.Head, t),
                     LeftHand = Interpolate(left.LeftHand, right.LeftHand, t),
-                    RightHand = Interpolate(left.RightHand, right.RightHand, t)
+                    RightHand = Interpolate(left.RightHand, right.RightHand, t),
+                    Weapon = Interpolate(left.Weapon, right.Weapon, t)
                 };
                 return true;
             }
@@ -146,7 +147,8 @@ namespace EchoCloneMotionRecorder
             TimeSeconds = source.TimeSeconds,
             Head = ClonePose(source.Head),
             LeftHand = ClonePose(source.LeftHand),
-            RightHand = ClonePose(source.RightHand)
+            RightHand = ClonePose(source.RightHand),
+            Weapon = ClonePose(source.Weapon)
         };
 
         private static PoseSample ClonePose(PoseSample source) => new PoseSample
@@ -162,7 +164,7 @@ namespace EchoCloneMotionRecorder
 
         private static bool IsValid(MotionFrame f) =>
             IsFinite(f.TimeSeconds) && f.TimeSeconds >= 0f &&
-            IsValid(f.Head) && IsValid(f.LeftHand) && IsValid(f.RightHand);
+            IsValid(f.Head) && IsValid(f.LeftHand) && IsValid(f.RightHand) && IsValid(f.Weapon);
 
         private static bool IsValid(PoseSample p) =>
             p != null &&
