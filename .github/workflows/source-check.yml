@@ -34,13 +34,22 @@ jobs:
           test -f src/EchoCloneMotionRecorder.Nomad/BUILDING.md
           test -f src/EchoCloneMotionRecorder.Nomad/EchoCloneThunderScript.cs
           test -f src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj
+          test -f src/EchoCloneMotionRecorder.Nomad/manifest.json
           test -f tests/EchoCloneMotionRecorder.CoreChecks/Program.cs
           test -f tests/EchoCloneMotionRecorder.CoreChecks/EchoCloneMotionRecorder.CoreChecks.csproj
           python3 - <<'PY'
+          import json
           import xml.etree.ElementTree as ET
+
           ET.parse("src/EchoCloneMotionRecorder.Nomad/EchoCloneMotionRecorder.Nomad.csproj")
           ET.parse("src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj")
-          print("Project XML parses successfully.")
+          with open("src/EchoCloneMotionRecorder.Nomad/manifest.json", encoding="utf-8") as file:
+              manifest = json.load(file)
+          required = ("Name", "Description", "Author", "ModVersion", "GameVersion")
+          missing = [key for key in required if not manifest.get(key)]
+          if missing:
+              raise SystemExit("Manifest missing required fields: " + ", ".join(missing))
+          print("Project XML and manifest JSON parse successfully.")
           PY
           echo "Required source, test, and integration files are present."
 
