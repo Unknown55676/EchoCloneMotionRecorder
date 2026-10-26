@@ -29,6 +29,7 @@ The October 2026 1.3.2 update notes include an SDK assembly-list change adding `
 - [Technical plan](docs/TECHNICAL_PLAN.md)
 - [Quest 3S + iPhone workflow](docs/QUEST_ONLY_WORKFLOW.md)
 - [SDK integration notes](docs/SDK_INTEGRATION_NOTES.md)
+- [Remote build and Quest connection gates](docs/REMOTE_BUILD_AND_DEVICE_CONNECTION.md)
 
 ## Automated checks
 
