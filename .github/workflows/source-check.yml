@@ -13,6 +13,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
       - name: Check required project files
         shell: bash
         run: |
@@ -21,5 +26,8 @@ jobs:
           test -f docs/TECHNICAL_PLAN.md
           test -f docs/QUEST_ONLY_WORKFLOW.md
           test -f src/EchoCloneMotionRecorder/MotionFrame.cs
-          echo "Required planning and source files are present."
-          echo "This workflow does not compile or validate a game plugin."
+          test -f src/EchoCloneMotionRecorder/MotionRecording.cs
+          echo "Required source and planning files are present."
+
+      - name: Build game-independent recorder core
+        run: dotnet build src/EchoCloneMotionRecorder/EchoCloneMotionRecorder.csproj --configuration Release
