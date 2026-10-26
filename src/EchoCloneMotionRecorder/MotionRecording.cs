@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace EchoCloneMotionRecorder
 {
@@ -11,8 +12,18 @@ namespace EchoCloneMotionRecorder
     public sealed class MotionRecording
     {
         private readonly List<MotionFrame> frames = new List<MotionFrame>();
+        private readonly ReadOnlyCollection<MotionFrame> readOnlyFrames;
 
-        public IReadOnlyList<MotionFrame> Frames => frames;
+        public MotionRecording()
+        {
+            readOnlyFrames = frames.AsReadOnly();
+        }
+
+        /// <summary>
+        /// Read-only view of recorded frames. Each accepted frame is copied on input;
+        /// samples returned by TrySample are also copies.
+        /// </summary>
+        public IReadOnlyList<MotionFrame> Frames => readOnlyFrames;
         public bool IsRecording { get; private set; }
         public int FrameCount => frames.Count;
         public float DurationSeconds => frames.Count == 0 ? 0f : frames[frames.Count - 1].TimeSeconds;
@@ -33,7 +44,8 @@ namespace EchoCloneMotionRecorder
             if (!IsRecording || frame == null || !IsValid(frame))
                 return false;
 
-            if (frames.Count > 0 && frame.TimeSeconds < frames[frames.Count - 1].TimeSeconds)
+            // Strictly increasing timestamps avoid ambiguous samples and zero-length intervals.
+            if (frames.Count > 0 && frame.TimeSeconds <= frames[frames.Count - 1].TimeSeconds)
                 return false;
 
             frames.Add(CloneFrame(frame));
@@ -54,7 +66,7 @@ namespace EchoCloneMotionRecorder
         public bool TrySample(float timeSeconds, out MotionFrame sample)
         {
             sample = null;
-            if (frames.Count == 0 || float.IsNaN(timeSeconds) || float.IsInfinity(timeSeconds))
+            if (frames.Count == 0 || !IsFinite(timeSeconds))
                 return false;
 
             if (timeSeconds <= frames[0].TimeSeconds)
@@ -78,7 +90,7 @@ namespace EchoCloneMotionRecorder
 
                 MotionFrame left = frames[i - 1];
                 float span = right.TimeSeconds - left.TimeSeconds;
-                float t = span <= 0f ? 0f : (timeSeconds - left.TimeSeconds) / span;
+                float t = (timeSeconds - left.TimeSeconds) / span;
                 sample = new MotionFrame
                 {
                     TimeSeconds = timeSeconds,
@@ -118,6 +130,9 @@ namespace EchoCloneMotionRecorder
             }
             else
             {
+                p.RotationX = 0f;
+                p.RotationY = 0f;
+                p.RotationZ = 0f;
                 p.RotationW = 1f;
             }
 
